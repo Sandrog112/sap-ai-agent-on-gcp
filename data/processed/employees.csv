@@ -1,0 +1,15 @@
+employee_id,first_name,middle_initial,last_name,email,login,phone,sales_org
+0000000001,Derrick,L,Magill,derrick.magill@itelo.info,derrickm,630-374-0306,AMER
+0000000002,Philipp,T,Egger,philipp.egger@itelo.info,philippm,09603 61 24 64,EMEA
+0000000003,Ellis,K,Robertson,ellis.robertson@itelo.info,ellism,070 8691 2288,EMEA
+0000000004,William,M,Mussen,william.mussen@itelo.info,williamm,026734 4556,APJ
+0000000005,Javas,,Hegde,javas.hegde@itelo.info,javasm,02224135120,APJ
+0000000006,Haseena al,,Yousuf,alhaseena.yousuf@itelo.info,haseenaalf,2288340,EMEA
+0000000007,Roberta,M,Holloway,roberta.holloway@itelo.info,robertaf,306-598-7404,AMER
+0000000008,Pénélope,G,Duperré,penelope.duperre@itelo.info,penelopef,03.23.46.10404,EMEA
+0000000009,Kirk,J,Lee,kirk.lee@itelo.info,kirkm,805-756-6064,AMER
+0000000010,Janet,R,Gray,janet.gray@itelo.info,janetf,201-849-2465,AMER
+0000000011,Nelson,J,Wilkens,nelson.wilkens@itelo.info,nelsonm,916-223-7055,AMER
+0000000012,Willard,R,Chatman,willard.chatman@itelo.info,willardm,416-794-6633,AMER
+0000000013,Carroll,S,Pewitt,carroll.pewitt@itelo.info,carrollm,780-682-9921,AMER
+0000000014,Kenneth,H,Weise,kenneth.weise@itelo.info,kennethm,416-609-5608,AMER
