@@ -1,0 +1,19 @@
+[project]
+name = "sap-ai-agent-on-gcp"
+version = "0.1.0"
+description = "LangChain agent on GCP that looks up and changes SAP-like sales data"
+requires-python = ">=3.13,<3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "ipykernel",
+    "matplotlib",
+    "nbconvert",
+    "numpy",
+    "pandas",
+    "seaborn",
+]
+
+[tool.ruff]
+line-length = 120

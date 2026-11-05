@@ -1,0 +1,41 @@
+partner_id,company_name,legal_form,email,phone,website,street,building,city,postal_code,country,region,preferred_currency,created_by,created_at,changed_by,changed_at
+0100000000,All For Bikes,Inc.,maria.brown@all4bikes.com,622734567,http://www.all4bikes.com,Settlers Lane,5027,West Nyack,10994,US,AMER,USD,0000000010,2025-04-15,0000000010,2025-04-15
+0100000001,Amaze Bikes Inc,Inc.,bob.buyer@amazebikes.com,3088530,http://www.amazebikes.com,Woodland Terrace,4467,Fair Oaks,95628,US,AMER,USD,0000000013,2025-04-15,0000000013,2025-04-15
+0100000002,Arena Sports Inc,Inc.,victor.sanchez@arenasportusa.com,3023352668,http://www.arenasportusa.com,Layman Avenue,2250,Dunn,28334,US,AMER,USD,0000000014,2025-04-15,0000000014,2025-04-15
+0100000003,Atlanta Corp Inc,Inc.,franklin.jones@atlantausa.com,511403266,http://www.atlantausa.com,University Drive,4697,Chicago,60605,US,AMER,USD,0000000010,2025-04-15,0000000010,2025-04-15
+0100000004,Bike World Inc,Inc.,robert_brown@bikeworlds.com,2244668800,http://www.bikeworlds.com,Bagwell Avenue,1565,Ocala,34471,US,AMER,USD,0000000004,2025-04-15,0000000004,2025-04-15
+0100000005,Alpha AG,AG,bart.koenig@alphabikes.de,2511415,http://www.alphabikes.de,Kantstraße,56,Callenberg,02681,DE,EMEA,EUR,0000000006,2025-04-15,0000000006,2025-04-15
+0100000006,BuchungsKreis 1010,GmbH,sarah.schwind@buchungkreis-gmbh.de,9078563412,http://www.buchungkreis-gmbh.de,Luetzowplatz,74,Trimport,54636,DE,EMEA,EUR,0000000001,2025-04-15,0000000001,2025-04-15
+0100000007,Trek Cycle AG,AG,mirjam.schmidt@trekcycle-berlin.de,149744423,http://www.trekcycle-berlin.de,Brandenburgische Straße,10,Berlin Mariendorf,12107,DE,EMEA,EUR,0000000008,2025-04-15,0000000008,2025-04-15
+0100000008,Tona Bikes AG,AG,saskia.sommer@tonabikes-ag.de,7257716,http://www.tonabikes-ag.de,An Der Urania,30,Marne,25705,DE,EMEA,EUR,0000000008,2025-04-15,0000000008,2025-04-15
+0100000009,Meine Bicycle,GmbH,dagmar.schulze@meinebicyclebayern.de,1133557799,http://www.meinebicyclebayern.de,Sonnenallee,43,Augsburg,86045,DE,EMEA,EUR,0000000013,2025-04-15,0000000013,2025-04-15
+0100000010,Avante Grande Bikes,Ltd.,jorgemontalban@avantegrande.co.uk,6789012345,http://www.avantegrande.co.uk,Brynglas Road,106,Glyntaff,CF37 3JJ,GB,EMEA,GBP,0000000010,2025-04-15,0000000010,2025-04-15
+0100000011,Bike On,Ltd.,johanna.esther@bikeon.co.uk,6623612804,http://www.bikeon.co.uk,Pier Road,86,Stanton Wick,BS18 9DW,GB,EMEA,GBP,0000000013,2025-04-15,0000000013,2025-04-15
+0100000012,Carefree Cycles,Ltd.,miguel.luengo@carefreecycles.com,2589436180,http://www.carefreecycles.com,Scotsburn Rd,75,Talgarth,LD3 7QD,GB,EMEA,GBP,0000000001,2025-04-15,0000000001,2025-04-15
+0100000013,G&M Bicycle,Ltd.,isabel.nemours@gnmbikes.co.uk,4507867136,http://www.gnmbikes.co.uk/,Broomfield Place,48,Stonestreet Green,TN25 2XG,GB,EMEA,GBP,0000000008,2025-04-15,0000000008,2025-04-15
+0100000014,Keep Cycling,Ltd.,igor.tarassow@keepcycling-london.co.uk,5850428367,http://www.keepcycling-london.co.uk,Guild Street,50,London,SE14 8JW,GB,EMEA,GBP,0000000006,2025-04-15,0000000006,2025-04-15
+0100000015,iCare Australia,Inc.,alexis.harper@icareaussie.com.au,7609448173,http://www.icareaussie.com.au,Raglan Street,5,Kitoba,4605,AU,APJ,AUD,0000000014,2025-04-15,0000000014,2025-04-15
+0100000016,CC SportWorld,Inc.,c.alfaro@ccsport.com.au,6879342945,http://www.ccsport.com.au,Creedon Street,11,Meadow Heights,3048,AU,APJ,AUD,0000000008,2025-04-15,0000000008,2025-04-15
+0100000017,DigiPay,Inc.,sven.j@digipay.com.au,2208791738,http://www.digipay.com.au,Darwinia Loop,11,Kununurra,6743,AU,APJ,AUD,0000000005,2025-04-15,0000000005,2025-04-15
+0100000018,TechCycle Canberra,Inc.,yoshiko.kakuji@techcyclecanberra.com.au,4440238917,http://www.techcyclecanberra.com.au,Quayside Vista,18,Canberra,2601,AU,APJ,AUD,0000000008,2025-04-15,0000000008,2025-04-15
+0100000019,eBike 100,Inc.,alessio.galasso@ebike100.com,6328490087,http://www.ebike100.com,Quayside Vista,95,Canberra,2601,AU,APJ,AUD,0000000006,2025-04-15,0000000006,2025-04-15
+0100000020,Cycle World,Ltd.,sujaymishra@cycleworld.co.in,4050378468,http://www.cycleworld.co.in,Rahul Enclave,105,Mumbai,400092,IN,APJ,INR,0000000012,2025-04-15,0000000012,2025-04-15
+0100000021,High Tech Sports Inc,Ltd.,madhu.kumar@hitechsport.com,6065470312,http://www.hitechsport.com,Nampally,43,Hyderabad,400092,IN,APJ,INR,0000000008,2025-04-15,0000000008,2025-04-15
+0100000022,Tires On Fire,Ltd.,pooja.singh@tiresonfire.co.in,7980023486,http://www.tiresonfire.co.in,Rewa Fort Colony,15,Mumbai,400017,IN,APJ,INR,0000000003,2025-04-15,0000000003,2025-04-15
+0100000023,MX Bike,Ltd.,ajaz.khan@mxbyk.com,3629731486,http://www.mxbyk.com,Ambedkar Road,10,Mumbai,400012,IN,APJ,INR,0000000008,2025-04-15,0000000008,2025-04-15
+0100000024,FitnessWorld,Ltd.,aditya.rajput@fitnessworld.co.in,3206580974,http://www.fitnessworld.co.in,Faiz Road,93,Delhi,110005,IN,APJ,INR,0000000001,2025-04-15,0000000001,2025-04-15
+0100000025,Homerun Millwork Inc.,Inc.,mudassir.k@homerundubai.com,4580963184,http://www.homerundubai.com,Box No. 18673,,Jebel Ali Free Zone,18673,AE,EMEA,AED,0000000005,2025-04-15,0000000005,2025-04-15
+0100000026,Antonio Bandolera,Inc.,rehanshehzad@antoniobikes.com,1012697341,http://www.antoniobikes.com,Box No. 39388,,Dubai,39388,AE,EMEA,AED,0000000004,2025-04-15,0000000004,2025-04-15
+0100000027,Khan Cycles,Inc.,sarfaraz.khan@khancycles.ae,7345697824,http://www.khancycles.ae,Box No. 92064,,Dubai,92064,AE,EMEA,AED,0000000006,2025-04-15,0000000006,2025-04-15
+0100000028,Palm Beach Bike World,Inc.,alam.sheikh@palmbeachbikes.ae,469614115,http://www.palmbeachbikes.ae,Box No. 30134,,Dubai,30134,AE,EMEA,AED,0000000007,2025-04-15,0000000007,2025-04-15
+0100000029,A to Z Fitness,Inc.,bhushan.shetty@a2zfitnes.com,6839542781,http://www.a2zfitnes.com,Box No. 16939,,Jebel Ali Free Zone,16939,AE,EMEA,AED,0000000009,2025-04-15,0000000009,2025-04-15
+0100000030,Hudson SportsTec,Ltd.,romain.le_mason@hudsonsport.ca,6714954542,http://www.hudsonsport.ca,St. John Street,3578,Borden,S4P 3Y2,CA,AMER,CAD,0000000010,2025-04-15,0000000010,2025-04-15
+0100000031,Ebike 36,Ltd.,anthony.lebouef@ebike36.ca,2483693027,http://www.ebike36.ca,Heatherleigh,3404,Cooksville,L5A 1V9,CA,AMER,CAD,0000000003,2025-04-15,0000000003,2025-04-15
+0100000032,Wichita Sport,Ltd.,lisa.felske@wichitasport.com,2094573421,http://www.wichitasport.com,Elgin Street,1008,Iroquois,K0E 1K0,CA,AMER,CAD,0000000001,2025-04-15,0000000001,2025-04-15
+0100000033,Move by Bike,Ltd.,jonathan.d.mason@movebybike.ca,4136278910,http://www.movebybike.ca,rue des Églises Est,2273,Schefferville,J0C 1G0,CA,AMER,CAD,0000000001,2025-04-15,0000000001,2025-04-15
+0100000034,TechCycle,Ltd.,amelie.troyat@techcycletoronto.ca,3540671320,http://www.techcycletoronto.ca,Adelaide St,1483,Toronto,M5H 1P6,CA,AMER,CAD,0000000004,2025-04-15,0000000004,2025-04-15
+0100000035,YourCycleShop,S.A.R.L.,sophie.ribery@yourcycleshop.fr,7315064077,http://www.yourcycleshop.fr,rue Ernest Renan,21,Chelles,77500,FR,EMEA,EUR,0000000007,2025-04-15,0000000007,2025-04-15
+0100000036,Unolab Manufacturing,S.A.R.L.,jorge.velez@unolabmanufacturing.com,4381762683,http://www.unolabmanufacturing.com,Place Napoléon,55,Laon,02000,FR,EMEA,EUR,0000000013,2025-04-15,0000000013,2025-04-15
+0100000037,E bike 201,S.A.R.L.,joseph_gschwandtner@ebike201.fr,9703586412,http://www.ebike201.fr,rue Jean Vilar,73,Besanon,25000,FR,EMEA,EUR,0000000004,2025-04-15,0000000004,2025-04-15
+0100000038,The Cycle Factor,S.A.R.L.,george_d_grant@thecyclefactor.fr,6843585642,http://www.thecyclefactor.fr,rue de Lille,54,Athis-Mons,91200,FR,EMEA,EUR,0000000003,2025-04-15,0000000003,2025-04-15
+0100000039,Eiffel Bikes,S.A.R.L.,theodor.monathy@eiffelbikes.fr,4203876954,http://www.eiffelbikes.fr,rue Nationale,114,Paris,75006,FR,EMEA,EUR,0000000009,2025-04-15,0000000009,2025-04-15
