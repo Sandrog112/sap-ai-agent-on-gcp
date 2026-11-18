@@ -5,9 +5,10 @@
     uv run --env-file .env python deploy.py call-tool get_sales_order '{"sales_order_id": "0500000318"}'
     uv run --env-file .env python deploy.py destroy
 
-`deploy` enables the APIs and creates or updates the service accounts, the Cloud SQL databases and grants, the MCP tool
-server on Cloud Run, Memory Bank, the log-based metrics and the agent on Agent Runtime, and writes the resource
-identifiers to deploy-outputs.json. Each step lives in infra/, one module per service.
+`deploy` enables the APIs and creates or updates the service accounts, the secret with the router's Gemini API key,
+the Cloud SQL databases and grants, the MCP tool server on Cloud Run, Memory Bank, the log-based metrics and the agent
+on Agent Runtime, and writes the resource identifiers to deploy-outputs.json. Each step lives in infra/, one module per
+service.
 """
 
 import argparse
@@ -20,7 +21,14 @@ from typing import Any
 
 from agent.config import COMPLEX_MODEL, GEMINI_LOCATION, MEMORY_LOCATION, ROUTER_MODEL, SIMPLE_MODEL
 from agent.tools import IDEMPOTENCY_FIELD, REQUESTER_FIELD, SERVER_NAME, tool_client
-from infra.config import AUTO_APPROVAL_LIMIT, BUSINESS_DATE, CHECKPOINT_DATABASE, OUTPUTS_FILE, TOOL_SERVICE
+from infra.config import (
+    AUTO_APPROVAL_LIMIT,
+    BUSINESS_DATE,
+    CHECKPOINT_DATABASE,
+    GEMINI_API_KEY_SECRET,
+    OUTPUTS_FILE,
+    TOOL_SERVICE,
+)
 from infra.data_store import deploy_data_store, destroy_data_store
 from infra.gcp import (
     agent_platform,
@@ -37,6 +45,7 @@ from infra.iam import deploy_service_accounts, destroy_service_accounts
 from infra.memory import deploy_memory_bank, destroy_memory_bank
 from infra.observability import destroy_observability, enable_observability
 from infra.runtime import deploy_runtime, destroy_runtime
+from infra.secrets import deploy_gemini_secret, destroy_gemini_secret
 from infra.tool_server import deploy_tool_server, destroy_tool_server
 
 # Optional settings the agent reads as well, passed on only when set in .env.
@@ -49,6 +58,9 @@ def deploy() -> None:
 
     step("Service accounts")
     deploy_service_accounts()
+
+    step("Gemini API key of the router (Secret Manager)")
+    deploy_gemini_secret()
 
     step("Cloud SQL: databases, sales data, ledger and grants")
     deploy_data_store()
@@ -67,6 +79,7 @@ def deploy() -> None:
         "GCP_PROJECT_ID": project_id(),
         "TOOL_SERVER_URL": tool_server_url,
         "MEMORY_BANK_NAME": memory_bank,
+        "GEMINI_API_KEY_SECRET": GEMINI_API_KEY_SECRET,
         "CLOUD_SQL_CONNECTION": instance_connection_name(),
         "CHECKPOINT_DB_NAME": CHECKPOINT_DATABASE,
         "DB_IAM_USER": database_user("runtime"),
@@ -84,6 +97,7 @@ def deploy() -> None:
         "tool_service": TOOL_SERVICE,
         "memory_bank_name": memory_bank,
         "memory_location": MEMORY_LOCATION,
+        "gemini_api_key_secret": GEMINI_API_KEY_SECRET,
         "cloud_sql_instance": instance_connection_name(),
         "database": setting("DB_NAME"),
         "checkpoint_database": CHECKPOINT_DATABASE,
@@ -108,6 +122,8 @@ def destroy() -> None:
     destroy_observability()
     step("Cloud SQL: ledger, conversation state and database users")
     destroy_data_store()
+    step("Gemini API key")
+    destroy_gemini_secret()
     step("Service accounts")
     destroy_service_accounts()
     OUTPUTS_FILE.unlink(missing_ok=True)

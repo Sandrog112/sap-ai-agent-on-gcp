@@ -4,16 +4,17 @@
                          |
                       remember
 
-The router picks one tier per customer message, and that model answers the whole message. Staying on one model within a
-turn is required by Gemini: it validates the thought signatures of a turn's function calls against that turn's history.
+The router (Gemini Decision 1, see agent/router.py) picks one tier per customer message, and that model answers the
+whole message. Staying on one model within a turn is required by Gemini: it validates the thought signatures of a turn's
+function calls against that turn's history.
 """
 
 import logging
 import os
 from datetime import UTC, datetime
-from typing import Any, Literal
+from typing import Any
 
-from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, AnyMessage, SystemMessage
 from langchain_core.tools import BaseTool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -22,18 +23,16 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode
 from langgraph.runtime import Runtime
 from opentelemetry import trace
-from pydantic import BaseModel, Field
 
 from agent.config import COMPLEX_MODEL, GEMINI_LOCATION, MAX_HISTORY_TURNS, ROUTER_MODEL, SIMPLE_MODEL
 from agent.memory import PartnerMemory
-from agent.prompts import ROUTER_PROMPT, SYSTEM_PROMPT
+from agent.prompts import SYSTEM_PROMPT
+from agent.router import COMPLEX, SIMPLE, Tier, TierRouter
 from agent.tools import InvocationContext
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
 
-SIMPLE, COMPLEX = "simple", "complex"
-Tier = Literal["simple", "complex"]
 ROUTER_CONTEXT_MESSAGES = 6
 ROUTER_MESSAGE_CHARACTERS = 500
 
@@ -42,13 +41,6 @@ class AgentState(MessagesState):
     tier: Tier
     route_reason: str
     memories: list[str]
-
-
-class RouteDecision(BaseModel):
-    """Which model should answer the latest message."""
-
-    tier: Tier = Field(description="simple for one lookup and a short reply, complex for anything more.")
-    reason: str = Field(description="Why, in at most 12 words.")
 
 
 def build_model(model: str, thinking_level: str, max_tokens: int, project_id: str | None) -> ChatGoogleGenerativeAI:
@@ -69,11 +61,9 @@ def build_graph(
     tools: list[BaseTool],
     memory: PartnerMemory,
     checkpointer: BaseCheckpointSaver,
+    router: TierRouter,
     project_id: str | None = None,
 ) -> CompiledStateGraph:
-    router = build_model(ROUTER_MODEL, "minimal", 512, project_id).with_structured_output(
-        RouteDecision, include_raw=True
-    )
     # Thinking is billed as output, so each tier only gets the level its work needs.
     models = {
         SIMPLE: build_model(SIMPLE_MODEL, "low", 4096, project_id).bind_tools(tools),
@@ -87,11 +77,12 @@ def build_graph(
     async def route(state: AgentState) -> dict[str, Any]:
         """Pick the tier. A router failure must not fail the request, so it falls back to the stronger model."""
         with tracer.start_as_current_span("route_message", attributes={"gen_ai.request.model": ROUTER_MODEL}) as span:
-            messages = [SystemMessage(ROUTER_PROMPT), HumanMessage(_router_transcript(state["messages"]))]
             try:
-                decision = await router.ainvoke(messages)
-                _record_usage(span, decision["raw"])
-                tier, reason = decision["parsed"].tier, decision["parsed"].reason
+                decision = await router.route(_router_transcript(state["messages"]))
+                span.set_attributes(
+                    {"gen_ai.usage.input_tokens": decision.input_tokens, "gen_ai.usage.output_tokens": 0}
+                )
+                tier, reason = decision.tier, decision.reason
             except Exception as error:
                 logger.exception("router failed, using the complex tier")
                 span.record_exception(error)
@@ -160,15 +151,13 @@ def _recent_turns(messages: list[AnyMessage]) -> list[AnyMessage]:
 
 def _router_transcript(messages: list[AnyMessage]) -> str:
     """The recent conversation as plain text. The router needs it to read follow-ups like "yes, go ahead", and leaving
-    out tool results keeps this cheapest call cheap."""
+    out tool results keeps this cheapest call cheap. The latest line is the message to route."""
     spoken = [message for message in messages if message.type == "human" or (message.type == "ai" and message.text)]
     lines = [
         f"{'Partner' if message.type == 'human' else 'Agent'}: {message.text[:ROUTER_MESSAGE_CHARACTERS]}"
         for message in spoken[-ROUTER_CONTEXT_MESSAGES:]
     ]
-    return (
-        "<conversation>\n" + "\n".join(lines) + "\n</conversation>\n\nChoose the tier for the latest Partner message."
-    )
+    return "\n".join(lines)
 
 
 def _record_usage(span: trace.Span, message: AIMessage) -> None:

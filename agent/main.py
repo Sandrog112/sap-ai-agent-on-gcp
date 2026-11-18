@@ -1,5 +1,6 @@
-"""Sales service agent: LangGraph on Agent Runtime, three Gemini model tiers, business tools through the MCP server on
-Cloud Run, conversation state in Cloud SQL and partner preferences in Memory Bank."""
+"""Sales service agent: LangGraph on Agent Runtime, Gemini Decision 1 routing each message to one of two Gemini model
+tiers, business tools through the MCP server on Cloud Run, conversation state in Cloud SQL and partner preferences in
+Memory Bank."""
 
 import asyncio
 import logging
@@ -15,6 +16,7 @@ from opentelemetry.trace import StatusCode
 
 from agent.graph import build_graph, model_of
 from agent.memory import PartnerMemory, open_checkpointer
+from agent.router import TierRouter, load_gemini_api_key
 from agent.tools import InvocationContext, load_tools
 from shared.telemetry import configure_telemetry, current_trace_id, flush_telemetry
 
@@ -111,7 +113,8 @@ class SalesServiceAgent:
                 project_id = os.environ["GCP_PROJECT_ID"]
                 tools = await load_tools(os.environ["TOOL_SERVER_URL"])
                 memory = PartnerMemory(os.getenv("MEMORY_BANK_NAME"), project_id)
-                self._graph = build_graph(tools, memory, await open_checkpointer(), project_id)
+                router = TierRouter(await load_gemini_api_key(project_id))
+                self._graph = build_graph(tools, memory, await open_checkpointer(), router, project_id)
         return self._graph
 
 
