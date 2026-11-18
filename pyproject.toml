@@ -1,19 +1,68 @@
 [project]
 name = "sap-ai-agent-on-gcp"
 version = "0.1.0"
-description = "LangChain agent on GCP that looks up and changes SAP-like sales data"
+description = "LangGraph agent on GCP that looks up and changes SAP-like sales data"
 requires-python = ">=3.13,<3.14"
-dependencies = []
+# Shared by both deployed services. Each service adds its own group below and is deployed with only that group,
+# see build_package in infra/gcp.py.
+dependencies = [
+    "cloud-sql-python-connector>=1.23.0",
+    "opentelemetry-exporter-gcp-trace>=1.15.0",
+    "opentelemetry-instrumentation-httpx>=0.66b2",
+    "opentelemetry-sdk>=1.45.2",
+]
 
 [dependency-groups]
+# The LangGraph agent on Agent Runtime.
+agent = [
+    "cloud-sql-python-connector[psycopg]>=1.23.0",
+    "google-auth[requests]>=2.62.1",
+    "google-cloud-agentplatform>=2.7.0",
+    "httpx>=0.28.1",
+    "langchain-google-genai>=4.4.3",
+    "langchain-mcp-adapters>=0.3.2",
+    "langgraph>=1.2.20",
+    "langgraph-checkpoint-postgres>=3.2.0",
+    "mcp>=1.30.0",
+    "psycopg[binary,pool]>=3.3.0",
+]
+# The MCP tool server on Cloud Run.
+tools = [
+    "asyncpg>=0.32.0",
+    "cloud-sql-python-connector[asyncpg]>=1.23.0",
+    "mcp>=1.30.0",
+    "opentelemetry-instrumentation-starlette>=0.66b2",
+    "uvicorn>=0.38.0",
+]
+# Runs on the operator's machine only: deploy.py and infra/, the data notebooks and the tests.
 dev = [
+    "cloud-sql-python-connector[pg8000]>=1.23.0",
+    "google-api-python-client>=2.180.0",
     "ipykernel",
     "matplotlib",
     "nbconvert",
     "numpy",
     "pandas",
+    "pre-commit>=4.3.0",
+    "pytest>=9.1.1",
     "seaborn",
 ]
 
+[tool.uv]
+default-groups = ["agent", "tools", "dev"]
+
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"data_preprocessing/*.ipynb" = ["E", "F", "W", "I", "B", "UP", "SIM"]
+
+[tool.pytest.ini_options]
+# data_preprocessing/ holds scripts, not a package: its loader is imported by tests/conftest.py.
+pythonpath = [".", "data_preprocessing"]
+testpaths = ["tests"]
+markers = ["live: runs against the deployed GCP stack (invokes the models, costs money)"]
+addopts = "-m 'not live'"
