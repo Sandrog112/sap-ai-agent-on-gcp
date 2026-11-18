@@ -10,6 +10,7 @@ PREFIX = "sap-agent"
 TOOL_SERVICE = f"{PREFIX}-tools"
 RUNTIME_NAME = f"{PREFIX}-runtime"
 MEMORY_BANK_NAME = f"{PREFIX}-memory"
+GEMINI_API_KEY_SECRET = f"{PREFIX}-gemini-api-key"  # the router's key, see infra/secrets.py
 # One identity per service, each allowed only what that service needs; see infra/iam.py and infra/data_store.py.
 SERVICE_ACCOUNTS = {"tools": f"{PREFIX}-tools", "runtime": f"{PREFIX}-runtime", "build": f"{PREFIX}-build"}
 CHECKPOINT_DATABASE = "agent_state"  # conversation state, apart from the sales data
@@ -30,6 +31,7 @@ REQUIRED_APIS = (
     "logging.googleapis.com",
     "monitoring.googleapis.com",
     "run.googleapis.com",
+    "secretmanager.googleapis.com",
     "sqladmin.googleapis.com",
     "storage.googleapis.com",
 )

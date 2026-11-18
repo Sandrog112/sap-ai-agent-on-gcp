@@ -17,10 +17,11 @@ from langgraph.checkpoint.memory import InMemorySaver
 from mcp.types import CallToolResult, TextContent
 
 from agent import graph
-from agent.config import COMPLEX_MODEL, MAX_HISTORY_TURNS, ROUTER_MODEL, SIMPLE_MODEL
-from agent.graph import RouteDecision, _recent_turns, _system_prompt
+from agent.config import COMPLEX_MODEL, MAX_HISTORY_TURNS, SIMPLE_MODEL
+from agent.graph import _recent_turns, _system_prompt
 from agent.main import SalesServiceAgent
 from agent.prompts import SYSTEM_PROMPT
+from agent.router import RouteDecision
 from agent.tools import (
     SERVER_NAME,
     InvocationContext,
@@ -108,15 +109,27 @@ class ScriptedModel:
     def bind_tools(self, tools: list) -> "ScriptedModel":
         return self
 
-    def with_structured_output(self, schema: type, include_raw: bool = False) -> "ScriptedModel":
-        return self
-
     async def ainvoke(self, messages: list) -> Any:
         self.requests.append(messages)
         reply = self.replies.pop(0)
         if isinstance(reply, Exception):
             raise reply
         return reply
+
+
+class ScriptedRouter:
+    """Stands in for Gemini Decision 1: gives its scripted decisions in order and records the conversations it saw."""
+
+    def __init__(self, *decisions: Any) -> None:
+        self.decisions = list(decisions)
+        self.conversations: list[str] = []
+
+    async def route(self, conversation: str) -> RouteDecision:
+        self.conversations.append(conversation)
+        decision = self.decisions.pop(0)
+        if isinstance(decision, Exception):
+            raise decision
+        return decision
 
 
 class RecordingMemory:
@@ -130,8 +143,8 @@ class RecordingMemory:
         self.remembered.append((actor_id, user_text, answer))
 
 
-def routed_to(tier: str) -> dict[str, Any]:
-    return {"raw": AIMessage(""), "parsed": RouteDecision(tier=tier, reason="scripted")}
+def routed_to(tier: str) -> RouteDecision:
+    return RouteDecision(tier, "scripted", input_tokens=50)
 
 
 def lookup(order_id: str) -> AIMessage:
@@ -144,7 +157,6 @@ def build_agent(
 ) -> SimpleNamespace:
     """The served agent with scripted models, stub tools and in-memory conversation state."""
     models = {
-        ROUTER_MODEL: ScriptedModel(*router),
         SIMPLE_MODEL: ScriptedModel(*simple),
         COMPLEX_MODEL: ScriptedModel(*complex_),
     }
@@ -160,8 +172,9 @@ def build_agent(
 
     memory = RecordingMemory()
     agent = SalesServiceAgent()
-    agent._graph = graph.build_graph([stub(name) for name in TOOL_NAMES], memory, InMemorySaver())
-    return SimpleNamespace(agent=agent, models=models, tool_calls=tool_calls, memory=memory)
+    router = ScriptedRouter(*router)
+    agent._graph = graph.build_graph([stub(name) for name in TOOL_NAMES], memory, InMemorySaver(), router)
+    return SimpleNamespace(agent=agent, router=router, models=models, tool_calls=tool_calls, memory=memory)
 
 
 def ask(built: SimpleNamespace, prompt: str, **overrides: str) -> dict[str, Any]:
@@ -193,6 +206,7 @@ def test_router_failure_falls_back_to_the_complex_model(monkeypatch):
         COMPLEX_MODEL,
     )
     assert answer["route_reason"] == "router failed: RuntimeError"
+    assert built.models[SIMPLE_MODEL].requests == []
 
 
 def test_conversation_continues_in_a_session_and_is_private_to_the_partner(monkeypatch):
@@ -207,6 +221,13 @@ def test_conversation_continues_in_a_session_and_is_private_to_the_partner(monke
     simple = built.models[SIMPLE_MODEL]
     assert [message.type for message in simple.requests[1]] == ["system", "human", "ai", "human"]
     assert [message.type for message in simple.requests[2]] == ["system", "human"]
+    # The router reads the conversation so far to judge a follow-up, and the latest message comes last.
+    assert built.router.conversations[0] == "Partner: Where is order 318?"
+    assert built.router.conversations[1].splitlines() == [
+        "Partner: Where is order 318?",
+        "Agent: In progress.",
+        "Partner: And when was it due?",
+    ]
 
 
 def test_model_failure_is_reported_without_details(monkeypatch):

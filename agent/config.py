@@ -2,11 +2,15 @@
 
 import os
 
-# The three model tiers. Prices are USD per 1M input/output tokens on the paid tier, checked on 2026-11-05.
+# The model tiers. Prices are USD per 1M input/output tokens on the paid tier, checked on 2026-11-05.
 #
-# Decides which tier answers: the cheapest current model with structured output. gemini-2.5-flash-lite costs less but
-# is retired on Agent Platform.
-ROUTER_MODEL = os.getenv("ROUTER_MODEL") or "gemini-3.1-flash-lite"  # $0.25 / $1.50
+# Decides which tier answers. Gemini Decision 1 does not generate text: it scores a closed set of options with
+# calibrated probabilities, which is all routing needs. It is only served by the Gemini Developer API (Google AI
+# Studio), so unlike the models below it is called with an API key, see agent/router.py. $0.10 input / $0 output.
+ROUTER_MODEL = os.getenv("ROUTER_MODEL") or "gemini-decision-1"
+# The router sends a message to the simple tier only when it is at least this sure that is enough, and otherwise to the
+# complex one: a wrongly simple answer costs more than a wrongly strong one.
+ROUTER_MIN_CONFIDENCE = 0.7
 # Lookups and short answers: one step up from the router, and its $2.50 output is what makes routing worthwhile.
 SIMPLE_MODEL = os.getenv("SIMPLE_MODEL") or "gemini-3.5-flash-lite"  # $0.30 / $2.50
 # Multi-step reasoning and anything that changes data. gemini-4-argon ($4 / $20 from December) is not needed for this.
