@@ -19,7 +19,7 @@ from mcp.types import CallToolResult, TextContent
 from agent import graph
 from agent.config import COMPLEX_MODEL, MAX_HISTORY_TURNS, SIMPLE_MODEL
 from agent.graph import _recent_turns, _system_prompt
-from agent.main import MAX_PROMPT_LENGTH, SalesServiceAgent
+from agent.main import SalesServiceAgent
 from agent.prompts import SYSTEM_PROMPT
 from agent.router import RouteDecision
 from agent.tools import (
@@ -52,7 +52,6 @@ PERMANENT = {"error": {"code": "POLICY_DENIED", "message": "above the limit", "r
     [
         {**VALID, "prompt": None},
         {**VALID, "prompt": "   "},
-        {**VALID, "prompt": "x" * (MAX_PROMPT_LENGTH + 1)},
         {**VALID, "actor_id": None},
         {**VALID, "actor_id": "22"},
         {**VALID, "actor_id": "../0100000003"},

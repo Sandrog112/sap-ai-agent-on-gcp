@@ -176,7 +176,7 @@ The router is tested through the real google-genai SDK against a local stand-in 
 agent/               LangGraph agent: entrypoint (main.py) · graph (graph.py) · Decision 1 router and its API key
                      (router.py) · prompts · MCP client and tool-call rules (tools.py) · Memory Bank and
                      checkpoints (memory.py)
-backend/             MCP tool server: tools (server.py) · SQL and ledger (store.py) · policy
+backend/             MCP tool server: tools (server.py) · SQL and ledger (store.py) · policy · fault injection
 shared/              Logging and tracing setup used by both services
 infra/               One module per service: iam, secrets, data_store, tool_server, memory, observability, runtime
 deploy.py            CLI: deploy · invoke · call-tool · destroy
