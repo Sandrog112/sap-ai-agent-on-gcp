@@ -1,7 +1,5 @@
 """The MCP tool server on Cloud Run: deployed from source, reachable only by the identities allowed to invoke it."""
 
-import os
-
 from infra.config import AUTO_APPROVAL_LIMIT, BUSINESS_DATE, PYTHON_VERSION, TOOL_SERVICE
 from infra.gcp import (
     build_package,
@@ -33,7 +31,6 @@ def deploy_tool_server(operator: str) -> str:
         "DB_IAM_USER": database_user("tools"),
         "AUTO_APPROVAL_LIMIT": AUTO_APPROVAL_LIMIT,
         "BUSINESS_DATE": BUSINESS_DATE,
-        "FAULT_INJECTION": os.getenv("FAULT_INJECTION") or "false",
         "TELEMETRY_ENABLED": "true",
     }
     run_gcloud(

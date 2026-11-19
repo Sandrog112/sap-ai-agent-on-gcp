@@ -1,5 +1,5 @@
 """The MCP tool server (backend/): lookups, ownership checks, the approval policy, idempotent changes, the database
-grants and the injected faults. Needs a PostgreSQL server, see tests/conftest.py."""
+grants. Needs a PostgreSQL server, see tests/conftest.py."""
 
 import asyncio
 import os
@@ -7,8 +7,6 @@ import os
 import asyncpg
 import pytest
 
-from agent.config import TOOL_TIMEOUT_SECONDS
-from backend import faults
 from backend.store import Store
 
 ME = "0100000022"  # Tires On Fire: 8 orders
@@ -200,6 +198,17 @@ def test_cancellation_closes_the_order_and_records_the_reason(call_tool, databas
     assert database("SELECT reason FROM agent_operations") == [["Ordered twice"]]
 
 
+def test_retried_cancellation_is_replayed_whatever_reason_the_model_words(call_tool, database):
+    cancel = {"requester_id": ME, "sales_order_id": OPEN_ORDER, "idempotency_key": "operation-1"}
+
+    first = call_tool("cancel_sales_order", reason="Ordered twice", **cancel)
+    retry = call_tool("cancel_sales_order", reason="Duplicate order", **cancel)  # a new session words it differently
+
+    assert (first["replayed"], retry["replayed"]) == (False, True)
+    assert retry["reason"] == "Ordered twice"  # the original result, not the new wording
+    assert database("SELECT reason FROM agent_operations") == [["Ordered twice"]]
+
+
 def test_billed_or_delivered_orders_cannot_be_changed(call_tool):
     completed = {"requester_id": ME, "sales_order_id": COMPLETED_ORDER, "idempotency_key": "operation-1"}
     partner, billed_ahead = BILLED_AHEAD
@@ -296,54 +305,3 @@ def test_database_grants_stop_what_the_tools_never_do(database, statement):
 
     with pytest.raises(asyncpg.InsufficientPrivilegeError):
         asyncio.run(run())
-
-
-# --- Injected faults (backend/faults.py) ------------------------------------------------------------------------------
-
-
-@pytest.fixture
-def fault_injection(database, monkeypatch):
-    monkeypatch.setenv("FAULT_INJECTION", "true")  # after `database`, which clears it
-
-
-def test_faults_are_off_by_default(call_tool):
-    assert call_tool("get_sales_order", requester_id="0100000039", sales_order_id="0500000314")["overdue"] is True
-
-
-@pytest.mark.usefixtures("fault_injection")
-def test_upstream_error_is_reported_as_retryable(call_tool):
-    error = call_tool("get_sales_order", requester_id="0100000039", sales_order_id="0500000314")["error"]
-
-    assert error["code"] == "UPSTREAM_ERROR"
-    assert error["retryable"] is True
-
-
-@pytest.mark.usefixtures("fault_injection")
-def test_slow_dependency_outlasts_the_agents_tool_timeout(call_tool, monkeypatch):
-    sleeps = []
-
-    async def record(seconds: float) -> None:
-        sleeps.append(seconds)
-
-    monkeypatch.setattr(faults.asyncio, "sleep", record)
-    call_tool("get_sales_order", requester_id="0100000029", sales_order_id="0500000316")
-
-    assert sleeps == [faults.SLOW_DEPENDENCY_SECONDS]
-    assert faults.SLOW_DEPENDENCY_SECONDS > TOOL_TIMEOUT_SECONDS
-
-
-@pytest.mark.usefixtures("fault_injection")
-def test_stale_data_asks_for_another_lookup(call_tool):
-    assert "note" in call_tool("get_sales_order", requester_id=OTHER, sales_order_id=OTHER_ORDER)
-
-
-@pytest.mark.usefixtures("fault_injection")
-def test_lost_response_is_recovered_by_an_idempotent_retry(call_tool, database):
-    cancel = {"sales_order_id": "0500000328", "reason": "Not needed", "idempotency_key": "operation-1"}
-
-    lost = call_tool("cancel_sales_order", requester_id="0100000036", **cancel)
-    retry = call_tool("cancel_sales_order", requester_id="0100000036", **cancel)
-
-    assert lost["error"]["retryable"] is True  # committed, but the response was lost
-    assert (retry["status"], retry["replayed"]) == ("Cancelled", True)
-    assert database("SELECT count(*) FROM agent_operations") == [[1]]

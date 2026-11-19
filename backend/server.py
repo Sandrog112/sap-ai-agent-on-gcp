@@ -31,7 +31,7 @@ from opentelemetry.trace import StatusCode
 from pydantic import BaseModel, Field
 from starlette.applications import Starlette
 
-from backend import faults, policy
+from backend import policy
 from backend.errors import ToolError
 from backend.policy import STATUS_NAMES
 from backend.store import Store
@@ -170,7 +170,7 @@ async def list_sales_orders(
 async def get_sales_order(sales_order_id: SalesOrderId, requester_id: Requester) -> dict[str, Any]:
     """Look up one of the signed-in partner's sales orders. Returns amounts, statuses, its sales representative, whether
     it is overdue, each line with product and delivery date, and which changes are currently allowed."""
-    return await faults.check_lookup(await _owned_order(sales_order_id, requester_id))
+    return await _owned_order(sales_order_id, requester_id)
 
 
 @business_tool(read_only=True)
@@ -296,8 +296,6 @@ async def cancel_sales_order(
     result, created = await (await store()).cancel_order(
         order["partner_id"], order["sales_order_id"], reason, policy.business_today(), _idempotency_key(idempotency_key)
     )
-    if created:
-        faults.confirm_cancellation(order["sales_order_id"])
     return {**result, "replayed": not created}
 
 

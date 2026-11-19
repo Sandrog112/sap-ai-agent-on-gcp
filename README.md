@@ -154,17 +154,6 @@ Every `invoke` response includes a `trace_id`. To investigate a request:
 
 Both services write one JSON object per log line with the trace id, so **Logs Explorer** shows the log lines of a trace next to its spans. Two log-based metrics count them in Cloud Monitoring: `logging.googleapis.com/user/sap_agent/tool_calls` (by tool and outcome, for example `POLICY_DENIED`) and `logging.googleapis.com/user/sap_agent/model_routes` (by tier).
 
-### Failure scenarios
-
-Set `FAULT_INJECTION=true` in `.env` and deploy to switch on four injected faults, each bound to one open order (see [faults.py](backend/faults.py)):
-
-| Ask as partner | About order | What happens |
-|---|---|---|
-| `0100000039` | `0500000314` | An upstream system returns HTTP 500: retried with backoff, then reported |
-| `0100000029` | `0500000316` | An upstream system hangs: the per-call timeout cuts it off |
-| `0100000003` | `0500000327` | The result asks for another lookup: the loop guard stops the model |
-| `0100000036` | cancel `0500000328` | The response is lost after the change is committed: the retry replays it |
-
 ## Tests
 
 ```bash
@@ -187,7 +176,7 @@ The router is tested through the real google-genai SDK against a local stand-in 
 agent/               LangGraph agent: entrypoint (main.py) · graph (graph.py) · Decision 1 router and its API key
                      (router.py) · prompts · MCP client and tool-call rules (tools.py) · Memory Bank and
                      checkpoints (memory.py)
-backend/             MCP tool server: tools (server.py) · SQL and ledger (store.py) · policy · fault injection
+backend/             MCP tool server: tools (server.py) · SQL and ledger (store.py) · policy
 shared/              Logging and tracing setup used by both services
 infra/               One module per service: iam, secrets, data_store, tool_server, memory, observability, runtime
 deploy.py            CLI: deploy · invoke · call-tool · destroy
