@@ -1,7 +1,7 @@
 """What the agent may do to sales data, decided in code at the tool server, where no prompt can reach it.
 
 The system prompt holds none of these rules. Who may call the tools at all is decided earlier, by Cloud Run's IAM check;
-what a caller may then touch is limited again by the database grants of infra/data_store.py.
+what a caller may then touch is limited again by the database grants of provisioning/database.py.
 """
 
 import os
@@ -11,7 +11,7 @@ from typing import Any
 
 from backend.errors import ToolError
 
-# USD: the most the agent may commit on its own. Set by deploy.py from infra/config.py.
+# USD: the most the agent may commit on its own. Terraform sets it (auto_approval_limit) to override this default.
 AUTO_APPROVAL_LIMIT = Decimal(os.getenv("AUTO_APPROVAL_LIMIT") or "100000.00")
 DEFAULT_LEAD_DAYS = 45  # close to the 47-day median between creating an order and delivering it in the dataset
 LATEST_DELIVERY_DAYS = 180

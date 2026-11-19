@@ -111,8 +111,8 @@ def _cloud_sql_connection_class() -> type[psycopg.Connection]:
 
 
 async def open_checkpointer() -> ThreadedPostgresSaver:
-    """The checkpointer on a small connection pool. Its tables already exist, see infra/data_store.py: the runtime has
-    no right to change the schema. CHECKPOINT_DATABASE_URL points a local run at any other Postgres instead."""
+    """The checkpointer on a small connection pool. Its tables already exist, see provisioning/database.py: the runtime
+    has no right to change the schema. CHECKPOINT_DATABASE_URL points a local run at any other Postgres instead."""
     settings: dict[str, Any] = {"min_size": 1, "max_size": 4, "kwargs": _CONNECTION_SETTINGS, "open": False}
     settings["check"] = ConnectionPool.check_connection
     url = os.getenv("CHECKPOINT_DATABASE_URL")

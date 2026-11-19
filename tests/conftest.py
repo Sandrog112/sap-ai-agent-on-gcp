@@ -1,5 +1,5 @@
 """Fixtures for the tool server: a real PostgreSQL database loaded with data/processed, reached with exactly the grants
-of infra/data_store.py, so the tests run the same SQL under the same privileges as the deployed server.
+of provisioning/database.py, so the tests run the same SQL under the same privileges as the deployed server.
 
 The tests that use it are skipped unless TEST_DATABASE_URL points at a PostgreSQL server whose user may create
 databases and roles, for example:
@@ -19,8 +19,10 @@ import pytest
 import upload_to_gcp
 
 from backend import server
-from infra.config import BUSINESS_DATE
-from infra.data_store import apply_tool_server_access
+from provisioning.database import apply_tool_server_access
+
+# The dataset's "today". It must equal the business_date default of terraform/variables.tf, see test_provisioning.py.
+BUSINESS_DATE = "2026-11-02"
 
 TEMPLATE = "sap_agent_test_template"
 DATABASE = "sap_agent_test"

@@ -294,7 +294,7 @@ def test_unexpected_failures_do_not_leak_details(call_tool, monkeypatch):
     ],
 )
 def test_database_grants_stop_what_the_tools_never_do(database, statement):
-    """The tool server's database user, as granted by infra/data_store.py, cannot go beyond what the tools need."""
+    """The tool server's database user, as granted by provisioning/database.py, cannot go beyond what the tools need."""
 
     async def run() -> None:
         connection = await asyncpg.connect(os.environ["DATABASE_URL"])

@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "LangGraph agent on GCP that looks up and changes SAP-like sales data"
 requires-python = ">=3.13,<3.14"
 # Shared by both deployed services. Each service adds its own group below and is deployed with only that group,
-# see build_package in infra/gcp.py.
+# see provisioning/package_source.py.
 dependencies = [
     "cloud-sql-python-connector>=1.23.0",
     "opentelemetry-exporter-gcp-trace>=1.15.0",
@@ -36,10 +36,9 @@ tools = [
     "opentelemetry-instrumentation-starlette>=0.66b2",
     "uvicorn>=0.38.0",
 ]
-# Runs on the operator's machine only: deploy.py and infra/, the data notebooks and the tests.
+# Runs on the operator's machine only: cli.py and provisioning/, the data notebooks and the tests.
 dev = [
     "cloud-sql-python-connector[pg8000]>=1.23.0",
-    "google-api-python-client>=2.180.0",
     "ipykernel",
     "matplotlib",
     "nbconvert",

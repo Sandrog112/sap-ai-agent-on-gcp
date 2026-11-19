@@ -67,7 +67,7 @@ The router only saves money: it grants nothing, so a message that talks its way 
 
 **How the router works.** [Gemini Decision 1](https://blog.google/innovation-and-ai/technology/developers-tools/gemini-decisions-api/) is not a chat model: the Decisions API scores a closed set of options against an input in one pass and returns calibrated probabilities, with no generated text and no output tokens to pay for. The agent asks it one question, "simple or complex?", over the last few messages. A message goes to the simple tier only when the model is at least 70% sure that is enough (`ROUTER_MIN_CONFIDENCE` in [config.py](agent/config.py)); anything less sure, and any router failure or timeout, goes to the complex tier. The reason in each response is the probability, for example `P(simple)=0.95`.
 
-The Decisions API is only served by the Gemini Developer API (Google AI Studio), not by Agent Platform, so it is the one call made with an API key instead of a service account. `deploy.py` stores the key from `GEMINI_API_KEY` in Secret Manager, readable only by the runtime's service account, and the agent reads it from there when an instance starts. The API is in `v1beta`.
+The Decisions API is only served by the Gemini Developer API (Google AI Studio), not by Agent Platform, so it is the one call made with an API key instead of a service account. Terraform stores the key (the `gemini_api_key` variable) in Secret Manager, readable only by the runtime's service account, and the agent reads it from there when an instance starts. The variable is ephemeral and the secret version write-only, so the key is not kept in the Terraform state either. The API is in `v1beta`.
 
 ## Security layers
 
@@ -81,7 +81,7 @@ The Decisions API is only served by the Gemini Developer API (Google AI Studio),
 | Splitting a large order | Tool server: the value added per partner in 24 hours is capped at the same limit | Several allowed orders adding up to a denied one |
 | Duplicate changes | The caller's `operation_id` as the idempotency key (set in code, not by the model) plus one database transaction per change | Retries of the same operation, in any session |
 | Least privilege | One service account per service. Database grants per table and column: the tool server cannot delete anything or touch prices, the runtime only reaches its conversation state | A bug or a compromised service going beyond its job |
-| The router's API key | Secret Manager: only the runtime's service account may read the secret; the key is never in the repository, the runtime's settings or the logs | A leaked key, and anyone but the agent using it |
+| The router's API key | Secret Manager: only the runtime's service account may read the secret; the key is never in the repository, the runtime's settings, the Terraform state or the logs | A leaked key, and anyone but the agent using it |
 
 The prompt contains no limits or access rules, so none of this relies on it.
 
@@ -93,46 +93,66 @@ Every request to the agent carries an `operation_id` next to `prompt`, `actor_id
 - A request with a **new** `operation_id` is a separate operation.
 - Reusing an `operation_id` for a different change to the same target is rejected as `IDEMPOTENCY_CONFLICT`.
 
-The caller decides what an operation is and must reuse its id when it retries. `deploy.py invoke` generates a new one unless you pass `--operation`.
+The caller decides what an operation is and must reuse its id when it retries. `cli.py invoke` generates a new one unless you pass `--operation`.
 
 ## Prerequisites
 
 - [uv](https://docs.astral.sh/uv/) and Python 3.13
-- The [gcloud CLI](https://cloud.google.com/sdk/docs/install), signed in twice: `gcloud auth login` (used to deploy the Cloud Run service) and `gcloud auth application-default login` (used by the Google API clients)
+- [Terraform](https://developer.hashicorp.com/terraform/install) 1.11 or newer
+- The [gcloud CLI](https://cloud.google.com/sdk/docs/install), signed in twice: `gcloud auth login` (Terraform runs `gcloud builds submit` for the tool server's image) and `gcloud auth application-default login` (used by the Google provider and by the helper scripts)
 - A [Google AI Studio API key](https://aistudio.google.com/api-keys) for the router, Gemini Decision 1 (Vertex AI does not serve it yet)
-- A Google Cloud project with billing enabled, in which you may enable APIs, create service accounts, change the project's IAM policy and administer Cloud SQL, Cloud Run and Agent Platform (the Owner role covers all of it)
+- A Google Cloud project with billing enabled, in which you may enable APIs, create service accounts, change the project's IAM policy and administer Cloud SQL, Cloud Run, Cloud Build and Agent Platform (the Owner role covers all of it)
 
 ## Quick start
 
 ```bash
-# 1. Configure (the .env file is git-ignored)
-cp .env.example .env
-#    set GCP_PROJECT_ID, GCP_REGION, CLOUD_SQL_INSTANCE, DB_NAME, DB_PASSWORD and GEMINI_API_KEY
-
-# 2. Install
+# 1. Install and run the unit tests (no GCP needed)
 uv sync
-
-# 3. Run the unit tests (no GCP needed)
 uv run pytest
 
-# 4. Deploy the whole stack (takes several minutes; longer when it creates the Cloud SQL instance)
-uv run --env-file .env python deploy.py deploy
+# 2. Configure (terraform.tfvars is git-ignored)
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+#    set project_id, region, db_password and gemini_api_key
 
-# 5. Talk to the agent as a partner
-uv run --env-file .env python deploy.py invoke "Which of my orders are overdue?" --actor 0100000022
+# 3. Deploy the whole stack (takes several minutes; longer when it creates the Cloud SQL instance)
+terraform init
+terraform apply
+
+# 4. Talk to the agent as a partner (from the repository root)
+cd ..
+uv run python cli.py invoke "Which of my orders are overdue?" --actor 0100000022
 #    to continue a conversation pass --session <id>; to retry a request pass the same --operation <id>
 
-# 6. Call a tool directly, without the model (IAM and the policy still apply)
-uv run --env-file .env python deploy.py call-tool get_sales_order '{"sales_order_id": "0500000318"}'
+# 5. Call a tool directly, without the model (IAM and the policy still apply)
+uv run python cli.py call-tool get_sales_order '{"sales_order_id": "0500000318"}'
 ```
 
-`deploy` enables the APIs and creates or updates the three service accounts, the secret with the router's API key, the Cloud SQL databases with the ledger and the grants, the tool server on Cloud Run, Memory Bank, the log-based metrics and the agent on Agent Runtime. It writes the resource identifiers to `deploy-outputs.json` (git-ignored). Re-running it updates the stack in place.
+`terraform apply` enables the APIs and creates or updates the three service accounts and their roles, the secret with the router's API key, the Cloud SQL instance, databases and IAM users, the Artifact Registry repository, the tool server's image and its Cloud Run service, the log-based metrics and the agent on Agent Runtime. Three steps that no Terraform resource covers run as Python helpers from `terraform apply` (see [provisioning/](provisioning/)): creating the ledger, loading the sales data and granting each service its database privileges, creating Memory Bank, and assembling each service's source. Re-running `terraform apply` updates the stack in place, and `terraform output` lists the resource identifiers that `cli.py` reads.
 
-About Cloud SQL: if the instance named by `CLOUD_SQL_INSTANCE` does not exist, `deploy` creates a small one and loads `data/processed/` into it. An existing instance is used as it is; it must be in `GCP_REGION` and have the database flag `cloudsql.iam_authentication=on`. The data is only ever loaded into an empty database, see [upload_to_gcp.py](data_preprocessing/upload_to_gcp.py).
+About Cloud SQL: with `create_sql_instance = true` (the default) Terraform creates a small instance and `apply` loads `data/processed/` into it. To use an existing instance, set `create_sql_instance = false` and `sql_instance_name`; it must be in `region` and have the database flag `cloudsql.iam_authentication=on`, which Terraform checks. The sales database of an existing instance may already exist, and Terraform must then adopt it instead of creating it:
+
+```bash
+terraform import google_sql_database.sales projects/<project>/instances/<instance>/databases/<db_name>
+```
+
+The data is only ever loaded into an empty database, see [upload_to_gcp.py](data_preprocessing/upload_to_gcp.py).
+
+### Which part is Terraform, which is Python
+
+| Terraform ([terraform/](terraform/)) | Python ([provisioning/](provisioning/)), called by Terraform |
+|---|---|
+| APIs, service accounts, IAM, secret, Cloud SQL instance, databases and IAM users, Artifact Registry, Cloud Build staging bucket, Cloud Run service and its invokers, Agent Runtime, log-based metrics | The ledger table, the sales-data load and the per-table and per-column grants (`database.py`), because the tests run the tool server under exactly these grants |
+| | Memory Bank (`memory_bank.py`), because the provider has no resource for it and the service chooses its id |
+| | Assembling each service's source and its locked requirements (`package_source.py`), because the image tag and the runtime version follow its content |
 
 ### Why there is no Dockerfile
 
-Both services are deployed from source. Agent Runtime takes the `agent/` package and a `requirements.txt` and installs the dependencies itself. Cloud Run needs a container image, but not a Dockerfile: `gcloud run deploy --source` builds the tool server with Google Cloud's buildpacks, which install the same kind of `requirements.txt` on a Google-maintained Python base image. `deploy.py` assembles both source packages under `build/` from the locked dependencies in `uv.lock`, each service with only its own dependency group.
+Both services are deployed from source. Agent Runtime takes the `agent/` package and a `requirements.txt` and installs the dependencies itself. Cloud Run needs a container image, but not a Dockerfile: Cloud Build builds the tool server with Google Cloud's buildpacks ([cloudbuild/tool-server.yaml](terraform/cloudbuild/tool-server.yaml)), which install the same kind of `requirements.txt` on a Google-maintained Python base image. [package_source.py](provisioning/package_source.py) assembles both source packages under `build/` from the locked dependencies in `uv.lock`, each service with only its own dependency group. The image is tagged with a hash of that source, so editing the code or the lock file is what makes `terraform apply` build and deploy again.
+
+### State
+
+The Terraform state holds the database password (the helper scripts need it when the stack is destroyed) but not the router's key. Keep it private: it is git-ignored here, and for a team use a [remote backend](https://developer.hashicorp.com/terraform/language/backend/gcs) with restricted access.
 
 ## Observability
 
@@ -158,7 +178,7 @@ Both services write one JSON object per log line with the trace id, so **Logs Ex
 
 ```bash
 uv run pytest                              # agent and data pipeline tests; those that need a database are skipped
-uv run --env-file .env pytest -m live      # scenarios against the deployed stack (calls the models, costs money)
+uv run pytest -m live                      # scenarios against the deployed stack (calls the models, costs money)
 ```
 
 The tool server's logic is SQL, so its tests run against a real PostgreSQL: each test gets a fresh copy of the sales data and connects with exactly the grants the deployed tool server has. The tests of the Cloud SQL loader use the same server. Point `TEST_DATABASE_URL` at a PostgreSQL server (version 18, like the Cloud SQL instance) whose user may create databases and roles:
@@ -178,8 +198,10 @@ agent/               LangGraph agent: entrypoint (main.py) · graph (graph.py) �
                      checkpoints (memory.py)
 backend/             MCP tool server: tools (server.py) · SQL and ledger (store.py) · policy
 shared/              Logging and tracing setup used by both services
-infra/               One module per service: iam, secrets, data_store, tool_server, memory, observability, runtime
-deploy.py            CLI: deploy · invoke · call-tool · destroy
+terraform/           The infrastructure: apis, iam, secrets, cloud_sql, database, tool_server, memory_bank, runtime,
+                     observability
+provisioning/        Python that Terraform calls: database schema and grants, Memory Bank, source packaging
+cli.py               Talk to the deployed stack: invoke · call-tool
 data/                Raw and processed sales data with its data dictionary
 data_preprocessing/  EDA notebook, preprocessing and the Cloud SQL loader
 tests/               Unit tests and opt-in live tests
@@ -188,7 +210,9 @@ tests/               Unit tests and opt-in live tests
 ## Cleanup
 
 ```bash
-uv run --env-file .env python deploy.py destroy
+cd terraform
+terraform apply -var sql_deletion_protection=false   # only if Terraform created the Cloud SQL instance
+terraform destroy
 ```
 
-Deletes the runtime, the Cloud Run service, Memory Bank, the metrics, the router's secret, the ledger, the conversation database, the database users and the service accounts. The Cloud SQL instance and the sales data are kept, including the changes the agent made to them, because they may have existed before the stack. To get the original data back, reload it with `upload_to_gcp.py --replace` and deploy again; to stop paying for the instance, delete it yourself. Logs and traces stay until their retention ends.
+Deletes the runtime, the Cloud Run service and its images, Memory Bank, the metrics, the router's secret, the ledger, the conversation database, the database users and the service accounts. The sales data is kept, including the changes the agent made to it: Terraform only forgets the sales database. An instance that Terraform created is deleted too once its deletion protection is off (`sql_deletion_protection`), and with it the sales data. To keep the instance, skip the first command and run `terraform state rm 'google_sql_database_instance.main[0]'` before `terraform destroy`; with the protection on, `destroy` removes everything else and then stops at the instance. To get the original data back, reload it with `upload_to_gcp.py --replace` and apply again. Logs and traces stay until their retention ends, and the enabled APIs stay on.

@@ -58,7 +58,7 @@ class TierRouter:
 
 
 async def load_gemini_api_key(project_id: str) -> str:
-    """The Gemini API key: GEMINI_API_KEY for a local run, otherwise the secret that deploy.py created, read with the
+    """The Gemini API key: GEMINI_API_KEY for a local run, otherwise the secret that Terraform created, read with the
     runtime's own service account."""
     if os.getenv("GEMINI_API_KEY"):
         return os.environ["GEMINI_API_KEY"]
