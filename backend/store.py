@@ -428,7 +428,8 @@ class Store:
             )
             return {"sales_order_id": sales_order_id, "status": STATUS_NAMES["X"], "reason": reason}, Decimal(0)
 
-        request = {"sales_order_id": sales_order_id, "reason": reason}
+        # Not the reason: it is free text, and a retry in a new session may word it differently.
+        request = {"sales_order_id": sales_order_id}
         return await self._once(partner_id, key, "cancel_sales_order", sales_order_id, request, apply, reason)
 
     async def update_contact(

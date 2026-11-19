@@ -27,6 +27,7 @@ SERVICE_NAME = "sap-sales-agent"
 ACTOR_ID = re.compile(r"\d{10}")
 SESSION_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}")
 OPERATION_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,63}")
+MAX_PROMPT_LENGTH = 4000  # characters; a longer message costs tokens on every model call and is not a business request
 # Each model call and tool call is a graph step. The tool loop guard stops the model long before this is reached.
 RECURSION_LIMIT = 40
 
@@ -58,6 +59,8 @@ class SalesServiceAgent:
         """
         if not isinstance(prompt, str) or not prompt.strip():
             return {"error": "'prompt' must be a non-empty string."}
+        if len(prompt) > MAX_PROMPT_LENGTH:
+            return {"error": f"'prompt' must be at most {MAX_PROMPT_LENGTH} characters."}
         if not isinstance(actor_id, str) or not ACTOR_ID.fullmatch(actor_id):
             return {"error": "'actor_id' must be a 10-digit partner id."}
         if not isinstance(session_id, str) or not SESSION_ID.fullmatch(session_id):

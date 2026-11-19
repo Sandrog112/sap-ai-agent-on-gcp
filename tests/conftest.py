@@ -88,7 +88,6 @@ def database(database_server: str, monkeypatch: pytest.MonkeyPatch) -> Iterator[
     tools_url = f"postgresql://{TOOLS_ROLE}:{TOOLS_ROLE}@{parts.hostname}:{parts.port or 5432}/{DATABASE}"
     monkeypatch.setenv("DATABASE_URL", tools_url)
     monkeypatch.setenv("BUSINESS_DATE", BUSINESS_DATE)
-    monkeypatch.delenv("FAULT_INJECTION", raising=False)
     owner = _connect(database_server, DATABASE)
 
     def query(sql: str, *parameters: Any) -> list:
