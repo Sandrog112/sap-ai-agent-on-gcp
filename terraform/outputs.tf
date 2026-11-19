@@ -10,7 +10,8 @@ output "region" {
 
 output "runtime_name" {
   description = "Resource name of the agent on Agent Runtime."
-  value       = google_vertex_ai_reasoning_engine.agent.name
+  # The provider's `name` is only the numeric id; `id` is the full resource name the client needs.
+  value = google_vertex_ai_reasoning_engine.agent.id
 }
 
 output "tool_server_url" {
