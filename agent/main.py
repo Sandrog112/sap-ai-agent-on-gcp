@@ -33,7 +33,7 @@ RECURSION_LIMIT = 40
 
 
 class SalesServiceAgent:
-    """The object Agent Runtime serves, see infra/runtime.py."""
+    """The object Agent Runtime serves, see terraform/runtime.tf."""
 
     def __init__(self) -> None:
         self._graph: CompiledStateGraph | None = None

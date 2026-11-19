@@ -1,4 +1,4 @@
-"""Settings shared by the agent and the deployment (infra/), kept free of heavy imports."""
+"""Settings shared by the agent and the deployment helpers (provisioning/), kept free of heavy imports."""
 
 import os
 

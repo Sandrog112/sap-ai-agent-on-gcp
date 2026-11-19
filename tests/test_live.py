@@ -1,6 +1,6 @@
 """Scenarios against the deployed stack. Opt-in, since they invoke the models and cost money:
 
-    uv run --env-file .env pytest -m live -v
+    uv run pytest -m live -v
 
 Every run places one small order (about 500 USD) for the demo partner and changes their contact phone number; the
 other changes use fixed operation ids, so re-running the suite replays them instead of repeating them.
@@ -12,13 +12,18 @@ from typing import Any
 
 import pytest
 
-from deploy import call_tool, invoke_agent
-from infra.config import OUTPUTS_FILE
+from cli import NotDeployedError, call_tool, invoke_agent, load_outputs
 
-pytestmark = [
-    pytest.mark.live,
-    pytest.mark.skipif(not OUTPUTS_FILE.exists(), reason="stack not deployed: run `python deploy.py deploy` first"),
-]
+pytestmark = pytest.mark.live
+
+
+@pytest.fixture(scope="module", autouse=True)
+def deployed_stack() -> None:
+    try:
+        load_outputs()
+    except NotDeployedError as error:
+        pytest.skip(f"stack not deployed: run `terraform apply` in terraform/ first ({error})")
+
 
 ME = "0100000022"  # Tires On Fire
 LARGE_ORDER = "0500000318"  # mine: 124,157 USD, above the approval limit, in progress

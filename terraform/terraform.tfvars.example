@@ -1,0 +1,25 @@
+# Copy to terraform.tfvars (git-ignored) and fill in.
+
+project_id = "your-project-id"
+
+# Region of the Cloud SQL instance, the Cloud Run service and the Agent Runtime.
+region = "europe-west1"
+
+# The database admin password. Sets the password of the instance Terraform creates.
+db_password = ""
+
+# Google AI Studio API key for the router, Gemini Decision 1 (https://aistudio.google.com/api-keys), which is only
+# served by the Gemini Developer API. Stored in Secret Manager; the agent reads it from there. It never reaches the
+# state. To rotate it, change it and increase gemini_api_key_version.
+gemini_api_key = ""
+
+# Use an existing Cloud SQL instance instead of creating one. It must be in `region` and have the database flag
+# cloudsql.iam_authentication=on.
+# create_sql_instance = false
+# sql_instance_name   = "sap-data"
+
+# Optional; the defaults are in agent/config.py and backend/policy.py.
+# router_model        = "gemini-decision-1"
+# simple_model        = "gemini-3.5-flash-lite"
+# complex_model       = "gemini-3.8-flash"
+# auto_approval_limit = "100000.00"

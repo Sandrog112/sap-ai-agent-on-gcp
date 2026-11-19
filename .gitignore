@@ -6,4 +6,11 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 build/
-deploy-outputs.json
+
+# Terraform: state holds the database password; the lock file is committed
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log

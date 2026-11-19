@@ -14,7 +14,7 @@ _RECORD_FIELDS = {*logging.makeLogRecord({}).__dict__, "message", "asctime", "co
 
 class CloudLoggingFormatter(logging.Formatter):
     """One JSON object per line, using the field names Cloud Logging reads for severity and trace correlation.
-    Anything passed as `extra=` becomes a field, which the log-based metrics of infra/observability.py rely on."""
+    Anything passed as `extra=` becomes a field, which the log-based metrics of terraform/observability.tf rely on."""
 
     def format(self, record: logging.LogRecord) -> str:
         entry: dict[str, Any] = {
@@ -35,7 +35,7 @@ class CloudLoggingFormatter(logging.Formatter):
 
 
 def configure_telemetry(service_name: str) -> None:
-    """Set up logging for this process, and span export when TELEMETRY_ENABLED=true (set by deploy.py).
+    """Set up logging for this process, and span export when TELEMETRY_ENABLED=true (set by Terraform).
 
     Locally spans stay no-ops, so running a service needs no Google credentials for tracing.
     """
