@@ -19,7 +19,6 @@ from mcp.types import CallToolResult, TextContent
 from agent import graph
 from agent.config import COMPLEX_MODEL, MAX_HISTORY_TURNS, SIMPLE_MODEL
 from agent.graph import _recent_turns, _system_prompt
-from agent.main import MAX_PROMPT_LENGTH, SalesServiceAgent
 from agent.prompts import SYSTEM_PROMPT
 from agent.router import RouteDecision
 from agent.tools import (
