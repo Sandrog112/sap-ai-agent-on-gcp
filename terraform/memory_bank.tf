@@ -35,7 +35,12 @@ resource "terraform_data" "memory_bank" {
 
 # Deferred to apply on the first run, when the bank does not exist yet.
 data "external" "memory_bank" {
-  program     = ["uv", "run", "--quiet", "python", "-m", "provisioning.memory_bank", "lookup"]
+  # `external` cannot set environment variables, so `env` does.
+  program = concat(
+    ["env"],
+    [for name, value in local.memory_bank_environment : "${name}=${value}"],
+    ["uv", "run", "--quiet", "python", "-m", "provisioning.memory_bank", "lookup"],
+  )
   working_dir = local.repository_root
 
   query = {}
